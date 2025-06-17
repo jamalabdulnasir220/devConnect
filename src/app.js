@@ -8,7 +8,9 @@ const app = express();
 // app.use("/hello/23", (req, res) => {
 //   res.send("This is difference");
 // });
-app.get("/user", (req, res) => {
+app.get("/user/:userId", (req, res) => {
+ console.log(req.params)
+//  console.log(req.query)
   res.send({ firstName: "Jamal", lastName: "Nasir" });
 });
 
