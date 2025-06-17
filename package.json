@@ -1,0 +1,20 @@
+{
+  "name": "devconnect-backend",
+  "version": "1.0.0",
+  "description": "An app to connect developers",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "backend"
+  ],
+  "author": "Abdul Nasir Jamal",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
