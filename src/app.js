@@ -2,21 +2,12 @@ const express = require("express");
 
 const app = express();
 
-const authenticateMiddleware = (req, res, next) => {
-  if (req.headers.authorization === "Bearer token") {
-    next();
-  } else {
-    res.status(401).send("Unauthorized");
-  }
-};
+app.all("/", (req, res) => {
+  res.send("Hello");
+});
 
-const loggerMiddleware = (req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-};
-
-app.get("/protected", authenticateMiddleware, loggerMiddleware, (req, res) => {
-  res.send("Protected Route");
+app.all("/again", (req, res) => {
+  res.send("HI");
 });
 
 app.listen(3000, () => {
