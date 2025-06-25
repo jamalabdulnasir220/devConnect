@@ -49,15 +49,28 @@ app.delete("/user", async (req, res) => {
 });
 
 // Update user in the database
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
   const data = req.body;
 
   try {
+    // Validate the skills field and set it to a maximum of 5 skills
+    if (data.skills && data.skills.length > 5 ) {
+      throw new Error("You can only have a maximum of 5 skills");
+    }
+    const UPDATES_ALLOWED = ["photo", "about", "skills", "gender", "age"];
+    const isUpdatesAllowed = Object.keys(data).every((k) =>
+      UPDATES_ALLOWED.includes(k)
+    );
+
+    if (!isUpdatesAllowed) {
+      throw new Error("Updates is not allowed on this field(s)");
+    }
+
     await User.findByIdAndUpdate(userId, data, { runValidators: true });
     res.send("User updated successfully");
   } catch (error) {
-    res.status(400).end("Something went wrong!");
+    res.status(400).end("Something went wrong! " + error.message);
   }
 });
 
