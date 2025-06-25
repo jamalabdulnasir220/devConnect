@@ -1,20 +1,58 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const validator = require("validator");
+const validateFunction = require("./utils/validation");
+const bycrypt = require("bcrypt");
 
 const app = express();
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  // console.log(req.body);
-  const user = new User(req.body);
-
   try {
+    const { firstName, lastName, email, password } = req.body;
+    // Validate the request body for user signup
+    validateFunction(req);
+
+    // Encrypt the password before saving it to the database
+    const hashedPassword = await bycrypt.hash(password, 10);
+    console.log("Hashed password: ", hashedPassword);
+
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+    });
     await user.save();
     res.send("User created successfully!");
   } catch (error) {
     res.status(400).send("Error making request: " + error.message);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    if (!validator.isEmail(email)) {
+      throw new Error("Invalid credentials");
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const isPasswordValid = await bycrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error("Invalid credentials");
+    }
+
+    res.send("Login successful!");
+  } catch (error) {
+    res.status(400).send("Error: " + error.message);
   }
 });
 
@@ -55,7 +93,7 @@ app.patch("/user/:userId", async (req, res) => {
 
   try {
     // Validate the skills field and set it to a maximum of 5 skills
-    if (data.skills && data.skills.length > 5 ) {
+    if (data.skills && data.skills.length > 5) {
       throw new Error("You can only have a maximum of 5 skills");
     }
     const UPDATES_ALLOWED = ["photo", "about", "skills", "gender", "age"];
