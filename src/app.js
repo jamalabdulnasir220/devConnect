@@ -18,6 +18,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+//Get a user from the database using a filter
 app.get("/user", async (req, res) => {
   const userEmail = req.body.email;
 
@@ -35,6 +36,32 @@ app.get("/user", async (req, res) => {
   }
 });
 
+// Delete user from the database
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId;
+
+  try {
+    await User.findByIdAndDelete(userId);
+    res.send("User deleted successfully");
+  } catch (error) {
+    res.status(400).send("Something went wrong!");
+  }
+});
+
+// Update user in the database
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId;
+  const data = req.body;
+
+  try {
+    await User.findByIdAndUpdate(userId, data, { runValidators: true });
+    res.send("User updated successfully");
+  } catch (error) {
+    res.status(400).end("Something went wrong!");
+  }
+});
+
+// Get all users from the database
 app.get("/feed", async (req, res) => {
   try {
     // This will return all the users from the database.
