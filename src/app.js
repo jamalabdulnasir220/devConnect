@@ -4,10 +4,13 @@ const User = require("./models/user");
 const validator = require("validator");
 const validateFunction = require("./utils/validation");
 const bycrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -50,10 +53,33 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid credentials");
     }
 
+    // Generate a JWT token
+    const token = await jwt.sign({ _id: user._id }, "DEVConnect@123");
+
+    // store in a cookie and send response back to the user
+    res.cookie("token", token);
+
     res.send("Login successful!");
   } catch (error) {
     res.status(400).send("Error: " + error.message);
   }
+});
+
+app.get("/profile", async (req, res) => {
+  const cookies = req.cookies;
+  const { token } = cookies;
+  if (!token) {
+    return res.status(401).send("Unauthorized: No token provided");
+  }
+
+  const decodedToken = await jwt.verify(token, "DEVConnect@123");
+  const { _id } = decodedToken;
+
+  const user = await User.findById(_id);
+  if (!user) {
+    return res.status(404).send("User not found");
+  }
+  res.send(user);
 });
 
 //Get a user from the database using a filter
