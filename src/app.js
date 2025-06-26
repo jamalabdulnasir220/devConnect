@@ -6,6 +6,7 @@ const validateFunction = require("./utils/validation");
 const bycrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const userAuth = require("./middlewares/auth");
 
 const app = express();
 
@@ -65,21 +66,12 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
-  const cookies = req.cookies;
-  const { token } = cookies;
-  if (!token) {
-    return res.status(401).send("Unauthorized: No token provided");
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    res.send(req.user);
+  } catch (error) {
+    res.status(400).send("Something went wrong!");
   }
-
-  const decodedToken = await jwt.verify(token, "DEVConnect@123");
-  const { _id } = decodedToken;
-
-  const user = await User.findById(_id);
-  if (!user) {
-    return res.status(404).send("User not found");
-  }
-  res.send(user);
 });
 
 //Get a user from the database using a filter
