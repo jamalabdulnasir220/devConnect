@@ -1,10 +1,10 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
 const connectDB = require("./config/database");
 const User = require("./models/user");
-const validator = require("validator");
-const validateFunction = require("./utils/validation");
-const bycrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
+const validateFunction = require("./utils/validation");
 const jwt = require("jsonwebtoken");
 const userAuth = require("./middlewares/auth");
 
@@ -15,13 +15,11 @@ app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
-    // Validate the request body for user signup
+    // Validate the req
     validateFunction(req);
-
-    // Encrypt the password before saving it to the database
-    const hashedPassword = await bycrypt.hash(password, 10);
-    console.log("Hashed password: ", hashedPassword);
+    const { firstName, lastName, email, password } = req.body;
+    // Encrypt the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
       firstName,
@@ -30,39 +28,36 @@ app.post("/signup", async (req, res) => {
       password: hashedPassword,
     });
     await user.save();
-    res.send("User created successfully!");
+    res.send("User created successfully");
   } catch (error) {
-    res.status(400).send("Error making request: " + error.message);
+    res.status(400).send("Error creating user: " + error.message);
   }
 });
 
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
     if (!validator.isEmail(email)) {
-      throw new Error("Invalid credentials");
+      throw new Error("Email is not valid");
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Incorrect credentials");
     }
-
-    const isPasswordValid = await bycrypt.compare(password, user.password);
-
+    const isPasswordValid = bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new Error("Invalid credentials");
+      throw new Error("Incorrect credentials");
     }
 
-    // Generate a JWT token
-    const token = await jwt.sign({ _id: user._id }, "DEVConnect@123");
+    const token = jwt.sign({ _id: user._id }, "DevConnect@123", {
+      expiresIn: "1d",
+    });
 
-    // store in a cookie and send response back to the user
-    res.cookie("token", token);
-
-    res.send("Login successful!");
+    res.cookie("token", token, { expires: new Date(Date.now() + 8 * 3600000) });
+    res.send("Login Successful!!");
   } catch (error) {
-    res.status(400).send("Error: " + error.message);
+    res.status(400).send("ERROR: " + error.message);
   }
 });
 
@@ -70,84 +65,22 @@ app.get("/profile", userAuth, async (req, res) => {
   try {
     res.send(req.user);
   } catch (error) {
-    res.status(400).send("Something went wrong!");
+    res.status(400).send("ERROR: " + error.message);
   }
 });
 
-//Get a user from the database using a filter
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.email;
-
-  try {
-    const user = await User.findOne({ email: userEmail });
-    if (!user) {
-      res.status(404).send("User not found");
-    } else res.send(user);
-    // const user = await User.find({ email: userEmail });
-    // if (user.length === 0) {
-    //   res.status(404).send("User not found");
-    // } else res.send(user);
-  } catch (error) {
-    res.status(400).send("Something went wrong");
-  }
-});
-
-// Delete user from the database
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-
-  try {
-    await User.findByIdAndDelete(userId);
-    res.send("User deleted successfully");
-  } catch (error) {
-    res.status(400).send("Something went wrong!");
-  }
-});
-
-// Update user in the database
-app.patch("/user/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-
-  try {
-    // Validate the skills field and set it to a maximum of 5 skills
-    if (data.skills && data.skills.length > 5) {
-      throw new Error("You can only have a maximum of 5 skills");
-    }
-    const UPDATES_ALLOWED = ["photo", "about", "skills", "gender", "age"];
-    const isUpdatesAllowed = Object.keys(data).every((k) =>
-      UPDATES_ALLOWED.includes(k)
-    );
-
-    if (!isUpdatesAllowed) {
-      throw new Error("Updates is not allowed on this field(s)");
-    }
-
-    await User.findByIdAndUpdate(userId, data, { runValidators: true });
-    res.send("User updated successfully");
-  } catch (error) {
-    res.status(400).end("Something went wrong! " + error.message);
-  }
-});
-
-// Get all users from the database
-app.get("/feed", async (req, res) => {
-  try {
-    // This will return all the users from the database.
-    const users = await User.find({});
-    res.send(users);
-  } catch (error) {
-    res.status(400).send("Something went wrong!");
-  }
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  console.log("Send connection request");
+  res.send(req.user?.firstName + " is Sending the request");
 });
 
 connectDB()
   .then(() => {
-    console.log("Database connection established...");
+    console.log("Connection to the database successful");
     app.listen(3000, () => {
-      console.log("Server is successfully listening on port 3000");
+      console.log("Listening to the app on port 3000");
     });
   })
   .catch((err) => {
-    console.error("Database connection is not established..");
+    console.error("Error connecting to the database", err);
   });

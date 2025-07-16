@@ -11,7 +11,7 @@ const userAuth = async (req, res, next) => {
     }
 
     // verify the token
-    const decodedToken = await jwt.verify(token, "DEVConnect@123");
+    const decodedToken = await jwt.verify(token, "DevConnect@123");
     const { _id } = decodedToken;
 
     // find the user in the database
@@ -20,10 +20,10 @@ const userAuth = async (req, res, next) => {
       res.status(404).send("User not found");
     }
     // attach the user to the request object
-    req.user = user
+    req.user = user;
     next();
   } catch (error) {
-    res.status(401).send("Unauthorized: Invalid token");
+    res.status(401).send("Unauthorized: Invalid token " + error.message);
   }
 };
 
