@@ -41,12 +41,16 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
+      enum: {
+        values: ["male", "female", "others"],
+        message: "{VALUE} is not a valid gender type"
+      }
       // custom validate function, this only works when creating a new user, not when updating...
-      validate(value) {
-        if (!["male", "female", "others"].includes(value)) {
-          throw new Error("gender passed is not valid");
-        }
-      },
+      // validate(value) {
+      //   if (!["male", "female", "others"].includes(value)) {
+      //     throw new Error("gender passed is not valid");
+      //   }
+      // },
     },
     skills: {
       type: [String],
