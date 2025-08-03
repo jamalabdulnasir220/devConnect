@@ -53,7 +53,6 @@ requestRouter.post(
       //     });
       // }
 
-
       const connectionRequest = new ConnectionRequestModel({
         fromUserId,
         toUserId,
@@ -70,5 +69,58 @@ requestRouter.post(
     }
   }
 );
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const { status, requestId } = req.params;
+      const loggedInUser = req.user;
+
+      // let's say Jamal has sent a request to Abdallah
+      // loggedInuser = Abdallah
+      // status sent must be interested, if it is ignored you shouldn't see the request
+      // requestId should be valid and should be the request that was sent to you
+
+      const allowedStatuses = ["Accepted", "Rejected"];
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          message: `Invalid status: ${status}. Allowed statuses are: ${allowedStatuses.join(
+            ", "
+          )}`,
+        });
+      }
+
+      // check if the requesId is valid
+      if(!requestId.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({ message: "Invalid request ID format." });
+      }
+
+      const connectionRequest = await ConnectionRequestModel.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "Interested",
+      });
+      if (!connectionRequest) {
+        return res.status(404).json({
+          message: "Connection request not found",
+        });
+      }
+      connectionRequest.status = status;
+
+      const updatedRequest = await connectionRequest.save();
+
+      res.status(200).json({
+        message: `Connection request ${status} successfully`,
+        updatedRequest,
+      });
+    } catch (error) {
+      res.status(400).send("ERROR: " + error.message);
+    }
+  }
+);
+
+
 
 module.exports = requestRouter;
