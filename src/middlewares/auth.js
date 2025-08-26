@@ -7,7 +7,7 @@ const userAuth = async (req, res, next) => {
     const { token } = req.cookies;
 
     if (!token) {
-      res.status(401).send("Unauthorized: No token provided");
+      return res.status(401).send("Unauthorized: Token is missing");
     }
 
     // verify the token
@@ -28,3 +28,6 @@ const userAuth = async (req, res, next) => {
 };
 
 module.exports = userAuth;
+
+
+

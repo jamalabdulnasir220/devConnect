@@ -67,11 +67,12 @@ const userSchema = new mongoose.Schema(
         }
       },
       default:
-        "https://res.cloudinary.com/dz1qj3x8h/image/upload/v1698231234/placeholder.png",
+        "https://akshaysaini.in/img/akshay.jpg",
     },
   },
   { timestamps: true }
 );
+
 
 userSchema.methods.getJWT = async function () {
   const user = this;
@@ -92,3 +93,4 @@ userSchema.methods.validatePassword = async function (passwordInputByUser) {
 };
 
 module.exports = mongoose.model("User", userSchema);
+

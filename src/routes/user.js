@@ -5,7 +5,7 @@ const User = require("../models/user");
 
 const userRouter = express.Router();
 
-const USER_SAFE_DATA = "firstName lastName photo age skills";
+const USER_SAFE_DATA = "firstName lastName photo age skills about gender";
 
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
@@ -16,9 +16,9 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
       status: "Interested",
     }).populate("fromUserId", USER_SAFE_DATA);
 
-    if (receivedRequests.length === 0) {
-      return res.status(404).send("No connection requests received");
-    }
+    // if (receivedRequests.length === 0) {
+    //   return res.send("No connection requests received");
+    // }
 
     // // Map over the received requests to include user details
     // const receivedRequestsWithDetails = await Promise.all(
@@ -105,7 +105,9 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
     });
 
     console.log("Hide users from feed:", hideUsersFromFeed);
-
+    // Ensure the logged in user's own ID is not in the hideUsersFromFeed set
+    hideUsersFromFeed.add(loggedInUser._id.toString());
+    
     const feedUsers = await User.find({
       $and: [
         { _id: { $nin: Array.from(hideUsersFromFeed) } },

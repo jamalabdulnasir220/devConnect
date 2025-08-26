@@ -82,7 +82,6 @@ requestRouter.post(
       // loggedInuser = Abdallah
       // status sent must be interested, if it is ignored you shouldn't see the request
       // requestId should be valid and should be the request that was sent to you
-
       const allowedStatuses = ["Accepted", "Rejected"];
       if (!allowedStatuses.includes(status)) {
         return res.status(400).json({
@@ -93,7 +92,7 @@ requestRouter.post(
       }
 
       // check if the requesId is valid
-      if(!requestId.match(/^[0-9a-fA-F]{24}$/)) {
+      if (!requestId.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(400).json({ message: "Invalid request ID format." });
       }
 
@@ -120,7 +119,5 @@ requestRouter.post(
     }
   }
 );
-
-
 
 module.exports = requestRouter;

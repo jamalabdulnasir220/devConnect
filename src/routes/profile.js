@@ -13,7 +13,11 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
+profileRouter.post("/profile/edit", userAuth, async (req, res) => {
+  // The CORS error is not caused by this route handler, but by the server's CORS configuration.
+  // However, the route handler has a bug: it sends two responses (res.json and res.send).
+  // We'll remove the duplicate response and keep only the correct one.
+
   try {
     if (!validateEditProfile(req)) {
       throw new Error("Update is not allowed");
@@ -28,8 +32,6 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       message: `Profile updated successfully for ${loggedInUser.firstName}`,
       data: loggedInUser,
     });
-
-    res.send(user);
   } catch (error) {
     res.status(400).send("ERROR: " + error.message);
   }
@@ -41,6 +43,7 @@ profileRouter.patch("/profile/changePassword", userAuth, async (req, res) => {
     if (!oldPassword || !newPassword) {
       throw new Error("Old password and new password are required");
     }
+
     const loggedInUser = req.user;
     const isPasswordValid = loggedInUser.validatePassword(oldPassword);
     if (!isPasswordValid) {
