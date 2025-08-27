@@ -11,7 +11,7 @@ const userAuth = async (req, res, next) => {
     }
 
     // verify the token
-    const decodedToken = await jwt.verify(token, "DevConnect@123");
+    const decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
     const { _id } = decodedToken;
 
     // find the user in the database
