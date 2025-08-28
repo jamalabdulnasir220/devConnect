@@ -11,12 +11,13 @@ const app = express();
 // Load Swagger specification from YAML file
 // const swaggerSpec = YAML.load("./src/swagger.yaml");
 
+
 app.use(
   cors({
-    // origin: [
-    //   "https://gittogetherbuddies.onrender.com",
-    //   // "http://localhost:5173/",
-    // ],
+    origin: [
+      "https://gittogetherbuddies.onrender.com",
+      "http://localhost:5173",
+    ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
