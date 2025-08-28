@@ -13,7 +13,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://gittogetherbuddies.onrender.com", "http://127.0.0.1:5173"],
+    origin: [
+      "https://gittogetherbuddies.onrender.com",
+      "http://localhost:3000",
+    ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],

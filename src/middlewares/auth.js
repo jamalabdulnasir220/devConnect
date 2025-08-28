@@ -10,6 +10,7 @@ const userAuth = async (req, res, next) => {
       return res.status(401).send("Unauthorized: Token is missing");
     }
 
+
     // verify the token
     const decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
     const { _id } = decodedToken;
