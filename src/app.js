@@ -9,7 +9,7 @@ require("dotenv").config();
 const app = express();
 
 // Load Swagger specification from YAML file
-const swaggerSpec = YAML.load("./swagger.yaml");
+const swaggerSpec = YAML.load("./src/swagger.yaml");
 
 app.use(
   cors({
