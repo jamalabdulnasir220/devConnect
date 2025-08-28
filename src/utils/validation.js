@@ -1,15 +1,38 @@
 const validator = require("validator");
 
 const validateFunction = (req) => {
-  // Validate the request body for user signup
+  const errors = [];
+
   const { firstName, lastName, email, password } = req.body;
-  if (!firstName || !lastName || firstName.length < 5 || lastName.length < 5) {
-    throw new Error("First name and last name are required");
-  } else if (!validator.isEmail(email)) {
-    throw new Error("Email is not valid");
+
+  // Validate firstName
+  if (!firstName || typeof firstName !== "string" || firstName.trim().length < 5) {
+    errors.push("First name is required and must be at least 5 characters long.");
+  }
+
+  // Validate lastName
+  if (!lastName || typeof lastName !== "string" || lastName.trim().length < 5) {
+    errors.push("Last name is required and must be at least 5 characters long.");
+  }
+
+  // Validate email
+  if (!email || typeof email !== "string" || !validator.isEmail(email)) {
+    errors.push("A valid email is required.");
+  }
+
+  // Validate password
+  if (!password || typeof password !== "string") {
+    errors.push("Password is required.");
   } else if (!validator.isStrongPassword(password)) {
-    throw new Error("Password is not strong enough");
-  } else return;
+    errors.push(
+      "Password is not strong enough. It must be at least 8 characters long and include at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol."
+    );
+  }
+
+  if (errors.length > 0) {
+    // Combine all errors into a single error message
+    throw new Error(errors.join(" "));
+  }
 };
 
 const validateEditProfile = (req) => {
