@@ -2,14 +2,14 @@ const express = require("express");
 const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const swaggerUi = require("swagger-ui-express");
-const YAML = require("yamljs");
+// const swaggerUi = require("swagger-ui-express");
+// const YAML = require("yamljs");
 require("dotenv").config();
 
 const app = express();
 
 // Load Swagger specification from YAML file
-const swaggerSpec = YAML.load("./src/swagger.yaml");
+// const swaggerSpec = YAML.load("./src/swagger.yaml");
 
 app.use(
   cors({
@@ -26,7 +26,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Swagger UI route
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
@@ -43,11 +43,11 @@ connectDB()
     console.log("Connection to the database successful");
     app.listen(process.env.PORT, () => {
       console.log("Listening to the app on port 3000");
-      console.log(
-        `Swagger UI available at: http://localhost:${
-          process.env.PORT || 3000
-        }/api-docs`
-      );
+      // console.log(
+      //   `Swagger UI available at: http://localhost:${
+      //     process.env.PORT || 3000
+      //   }/api-docs`
+      // );
     });
   })
   .catch((err) => {

@@ -1,0 +1,578 @@
+# openapi: 3.0.3
+# info:
+#   title: My Application API
+#   description: API documentation for My Application
+#   version: 1.0.0
+#   contact:
+#     name: API Support
+#     email: support@myapp.com
+#   license:
+#     name: MIT
+#     url: https://opensource.org/licenses/MIT
+
+# servers:
+#   - url: http://localhost:3000
+#     description: Development server
+#   - url: https://api.myapp.com
+#     description: Production server
+
+# paths:
+#   /health:
+#     get:
+#       summary: Health check
+#       description: Check if the API is running
+#       tags:
+#         - System
+#       responses:
+#         '200':
+#           description: API is healthy
+#           content:
+#             application/json:
+#               schema:
+#                 type: object
+#                 properties:
+#                   status:
+#                     type: string
+#                     example: "ok"
+#                   timestamp:
+#                     type: string
+#                     format: date-time
+#                     example: "2023-12-01T10:00:00Z"
+
+#   /auth/login:
+#     post:
+#       summary: User login
+#       description: Authenticate user and return access token
+#       tags:
+#         - Authentication
+#       requestBody:
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               required:
+#                 - email
+#                 - password
+#               properties:
+#                 email:
+#                   type: string
+#                   format: email
+#                   example: "user@example.com"
+#                 password:
+#                   type: string
+#                   format: password
+#                   example: "password123"
+#       responses:
+#         '200':
+#           description: Login successful
+#           content:
+#             application/json:
+#               schema:
+#                 type: object
+#                 properties:
+#                   access_token:
+#                     type: string
+#                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+#                   refresh_token:
+#                     type: string
+#                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+#                   user:
+#                     $ref: '#/components/schemas/User'
+#         '401':
+#           description: Invalid credentials
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#   /auth/register:
+#     post:
+#       summary: User registration
+#       description: Register a new user account
+#       tags:
+#         - Authentication
+#       requestBody:
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               required:
+#                 - email
+#                 - password
+#                 - name
+#               properties:
+#                 email:
+#                   type: string
+#                   format: email
+#                   example: "user@example.com"
+#                 password:
+#                   type: string
+#                   format: password
+#                   minLength: 8
+#                   example: "password123"
+#                 name:
+#                   type: string
+#                   example: "John Doe"
+#       responses:
+#         '201':
+#           description: User created successfully
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/User'
+#         '400':
+#           description: Invalid input
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#   /users:
+#     get:
+#       summary: Get all users
+#       description: Retrieve a list of all users (admin only)
+#       tags:
+#         - Users
+#       security:
+#         - bearerAuth: []
+#       parameters:
+#         - name: page
+#           in: query
+#           description: Page number
+#           required: false
+#           schema:
+#             type: integer
+#             default: 1
+#             minimum: 1
+#         - name: limit
+#           in: query
+#           description: Number of items per page
+#           required: false
+#           schema:
+#             type: integer
+#             default: 10
+#             minimum: 1
+#             maximum: 100
+#       responses:
+#         '200':
+#           description: List of users
+#           content:
+#             application/json:
+#               schema:
+#                 type: object
+#                 properties:
+#                   users:
+#                     type: array
+#                     items:
+#                       $ref: '#/components/schemas/User'
+#                   pagination:
+#                     $ref: '#/components/schemas/Pagination'
+#         '401':
+#           description: Unauthorized
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#   /users/{id}:
+#     get:
+#       summary: Get user by ID
+#       description: Retrieve a specific user by their ID
+#       tags:
+#         - Users
+#       security:
+#         - bearerAuth: []
+#       parameters:
+#         - name: id
+#           in: path
+#           required: true
+#           description: User ID
+#           schema:
+#             type: string
+#             format: uuid
+#       responses:
+#         '200':
+#           description: User details
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/User'
+#         '404':
+#           description: User not found
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#     put:
+#       summary: Update user
+#       description: Update user information
+#       tags:
+#         - Users
+#       security:
+#         - bearerAuth: []
+#       parameters:
+#         - name: id
+#           in: path
+#           required: true
+#           description: User ID
+#           schema:
+#             type: string
+#             format: uuid
+#       requestBody:
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               properties:
+#                 name:
+#                   type: string
+#                   example: "John Doe"
+#                 email:
+#                   type: string
+#                   format: email
+#                   example: "user@example.com"
+#       responses:
+#         '200':
+#           description: User updated successfully
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/User'
+#         '404':
+#           description: User not found
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#     delete:
+#       summary: Delete user
+#       description: Delete a user account
+#       tags:
+#         - Users
+#       security:
+#         - bearerAuth: []
+#       parameters:
+#         - name: id
+#           in: path
+#           required: true
+#           description: User ID
+#           schema:
+#             type: string
+#             format: uuid
+#       responses:
+#         '204':
+#           description: User deleted successfully
+#         '404':
+#           description: User not found
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#   /posts:
+#     get:
+#       summary: Get all posts
+#       description: Retrieve a list of all posts
+#       tags:
+#         - Posts
+#       parameters:
+#         - name: page
+#           in: query
+#           description: Page number
+#           required: false
+#           schema:
+#             type: integer
+#             default: 1
+#             minimum: 1
+#         - name: limit
+#           in: query
+#           description: Number of items per page
+#           required: false
+#           schema:
+#             type: integer
+#             default: 10
+#             minimum: 1
+#             maximum: 100
+#         - name: author
+#           in: query
+#           description: Filter by author ID
+#           required: false
+#           schema:
+#             type: string
+#             format: uuid
+#       responses:
+#         '200':
+#           description: List of posts
+#           content:
+#             application/json:
+#               schema:
+#                 type: object
+#                 properties:
+#                   posts:
+#                     type: array
+#                     items:
+#                       $ref: '#/components/schemas/Post'
+#                   pagination:
+#                     $ref: '#/components/schemas/Pagination'
+
+#     post:
+#       summary: Create a new post
+#       description: Create a new blog post
+#       tags:
+#         - Posts
+#       security:
+#         - bearerAuth: []
+#       requestBody:
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               required:
+#                 - title
+#                 - content
+#               properties:
+#                 title:
+#                   type: string
+#                   minLength: 1
+#                   maxLength: 200
+#                   example: "My First Blog Post"
+#                 content:
+#                   type: string
+#                   minLength: 1
+#                   example: "This is the content of my blog post..."
+#                 tags:
+#                   type: array
+#                   items:
+#                     type: string
+#                   example: ["technology", "programming"]
+#       responses:
+#         '201':
+#           description: Post created successfully
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Post'
+#         '400':
+#           description: Invalid input
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#   /posts/{id}:
+#     get:
+#       summary: Get post by ID
+#       description: Retrieve a specific post by its ID
+#       tags:
+#         - Posts
+#       parameters:
+#         - name: id
+#           in: path
+#           required: true
+#           description: Post ID
+#           schema:
+#             type: string
+#             format: uuid
+#       responses:
+#         '200':
+#           description: Post details
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Post'
+#         '404':
+#           description: Post not found
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#     put:
+#       summary: Update post
+#       description: Update an existing post
+#       tags:
+#         - Posts
+#       security:
+#         - bearerAuth: []
+#       parameters:
+#         - name: id
+#           in: path
+#           required: true
+#           description: Post ID
+#           schema:
+#             type: string
+#             format: uuid
+#       requestBody:
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               properties:
+#                 title:
+#                   type: string
+#                   minLength: 1
+#                   maxLength: 200
+#                   example: "Updated Blog Post Title"
+#                 content:
+#                   type: string
+#                   minLength: 1
+#                   example: "Updated content..."
+#                 tags:
+#                   type: array
+#                   items:
+#                     type: string
+#                   example: ["technology", "programming"]
+#       responses:
+#         '200':
+#           description: Post updated successfully
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Post'
+#         '404':
+#           description: Post not found
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+#     delete:
+#       summary: Delete post
+#       description: Delete a post
+#       tags:
+#         - Posts
+#       security:
+#         - bearerAuth: []
+#       parameters:
+#         - name: id
+#           in: path
+#           required: true
+#           description: Post ID
+#           schema:
+#             type: string
+#             format: uuid
+#       responses:
+#         '204':
+#           description: Post deleted successfully
+#         '404':
+#           description: Post not found
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: '#/components/schemas/Error'
+
+# components:
+#   securitySchemes:
+#     bearerAuth:
+#       type: http
+#       scheme: bearer
+#       bearerFormat: JWT
+
+#   schemas:
+#     User:
+#       type: object
+#       properties:
+#         id:
+#           type: string
+#           format: uuid
+#           example: "123e4567-e89b-12d3-a456-426614174000"
+#         name:
+#           type: string
+#           example: "John Doe"
+#         email:
+#           type: string
+#           format: email
+#           example: "user@example.com"
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2023-12-01T10:00:00Z"
+#         updated_at:
+#           type: string
+#           format: date-time
+#           example: "2023-12-01T10:00:00Z"
+#       required:
+#         - id
+#         - name
+#         - email
+#         - created_at
+#         - updated_at
+
+#     Post:
+#       type: object
+#       properties:
+#         id:
+#           type: string
+#           format: uuid
+#           example: "123e4567-e89b-12d3-a456-426614174000"
+#         title:
+#           type: string
+#           example: "My Blog Post"
+#         content:
+#           type: string
+#           example: "This is the content of my blog post..."
+#         author:
+#           $ref: '#/components/schemas/User'
+#         tags:
+#           type: array
+#           items:
+#             type: string
+#           example: ["technology", "programming"]
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2023-12-01T10:00:00Z"
+#         updated_at:
+#           type: string
+#           format: date-time
+#           example: "2023-12-01T10:00:00Z"
+#       required:
+#         - id
+#         - title
+#         - content
+#         - author
+#         - created_at
+#         - updated_at
+
+#     Pagination:
+#       type: object
+#       properties:
+#         page:
+#           type: integer
+#           example: 1
+#         limit:
+#           type: integer
+#           example: 10
+#         total:
+#           type: integer
+#           example: 100
+#         pages:
+#           type: integer
+#           example: 10
+#       required:
+#         - page
+#         - limit
+#         - total
+#         - pages
+
+#     Error:
+#       type: object
+#       properties:
+#         error:
+#           type: string
+#           example: "Error message"
+#         code:
+#           type: string
+#           example: "VALIDATION_ERROR"
+#         details:
+#           type: object
+#           additionalProperties: true
+#       required:
+#         - error
