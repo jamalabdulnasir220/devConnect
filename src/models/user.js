@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
-const jwt = require("jsonwebtoken")
-const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -43,8 +43,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: {
         values: ["male", "female", "others"],
-        message: "{VALUE} is not a valid gender type"
-      }
+        message: "{VALUE} is not a valid gender type",
+      },
       // custom validate function, this only works when creating a new user, not when updating...
       // validate(value) {
       //   if (!["male", "female", "others"].includes(value)) {
@@ -67,12 +67,11 @@ const userSchema = new mongoose.Schema(
         }
       },
       default:
-        "https://akshaysaini.in/img/akshay.jpg",
+        "https://cdn.vectorstock.com/i/500p/29/53/gray-silhouette-avatar-for-male-profile-picture-vector-56412953.jpg",
     },
   },
   { timestamps: true }
 );
-
 
 userSchema.methods.getJWT = async function () {
   const user = this;
@@ -89,8 +88,7 @@ userSchema.methods.validatePassword = async function (passwordInputByUser) {
     passwordInputByUser,
     user.password
   );
-  return isPasswordValid
+  return isPasswordValid;
 };
 
 module.exports = mongoose.model("User", userSchema);
-
