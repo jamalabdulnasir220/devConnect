@@ -23,11 +23,11 @@ authRouter.post("/signup", async (req, res) => {
     const savedUser = await user.save();
     const token = await savedUser.getJWT();
 
-    res.cookie("token", token, { 
+    res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
       secure: true,
       httpOnly: true,
-      sameSite: 'none'
+      sameSite: "none",
     });
 
     res.json({ message: "User Created Successfully", data: savedUser });
@@ -45,20 +45,25 @@ authRouter.post("/login", async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error("Incorrect credentials");
+      return res.status(404).json({ message: "Incorrect credentials" });
     }
-    const isPasswordValid = user.validatePassword(password);
+
+    const isPasswordValid = await bcrypt.compare(
+        password,
+        user.password
+    );
+    
     if (!isPasswordValid) {
-      throw new Error("Incorrect credentials");
+      return res.status(404).json({message: "Incorrect credentials"})
     }
 
     const token = await user.getJWT();
 
-    res.cookie("token", token, { 
+    res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
       secure: true,
       httpOnly: true,
-      sameSite: 'none'
+      sameSite: "none",
     });
     res.json({ message: "Login Successful", user });
   } catch (error) {

@@ -81,14 +81,14 @@ userSchema.methods.getJWT = async function () {
   return token;
 };
 
-userSchema.methods.validatePassword = async function (passwordInputByUser) {
-  const user = this;
+// userSchema.methods.validatePassword = async function (passwordInputByUser) {
+//   const user = this;
 
-  const isPasswordValid = await bcrypt.compare(
-    passwordInputByUser,
-    user.password
-  );
-  return isPasswordValid;
-};
+//   const isPasswordValid = await bcrypt.compare(
+//     passwordInputByUser,
+//     user.password
+//   );
+//   return isPasswordValid;
+// };
 
 module.exports = mongoose.model("User", userSchema);
