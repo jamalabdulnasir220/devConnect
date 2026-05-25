@@ -104,7 +104,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       hideUsersFromFeed.add(connection.toUserId.toString());
     });
 
-    console.log("Hide users from feed:", hideUsersFromFeed);
+    // console.log("Hide users from feed:", hideUsersFromFeed);
     // Ensure the logged in user's own ID is not in the hideUsersFromFeed set
     hideUsersFromFeed.add(loggedInUser._id.toString());
     
