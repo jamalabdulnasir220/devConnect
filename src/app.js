@@ -15,7 +15,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://gittogetherbuddies.onrender.com",
+      "http://13.51.237.44",
       "http://localhost:5173",
     ],
     credentials: true,
@@ -52,12 +52,9 @@ const startServer = async () => {
   const server = http.createServer(app);
   initializeSocket(server);
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT;
   server.listen(port, () => {
     console.log(`Listening to the app on port ${port}`);
-    // console.log(
-    //   `Swagger UI available at: http://localhost:${port}/api-docs`
-    // );
   });
 };
 
