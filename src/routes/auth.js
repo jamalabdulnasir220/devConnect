@@ -12,6 +12,15 @@ const sanitizeUser = (user) => {
   return obj;
 };
 
+// Cross-origin cookies on HTTP require secure: false (set COOKIE_SECURE=false in .env)
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.COOKIE_SECURE !== "false",
+  sameSite: process.env.COOKIE_SAME_SITE || "none",
+  path: "/",
+  expires: new Date(Date.now() + 8 * 3600000),
+};
+
 authRouter.post("/signup", async (req, res) => {
   try {
     // Validate the req
@@ -29,12 +38,7 @@ authRouter.post("/signup", async (req, res) => {
     const savedUser = await user.save();
     const token = await savedUser.getJWT();
 
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 8 * 3600000),
-      secure: true,
-      httpOnly: true,
-      sameSite: "none",
-    });
+    res.cookie("token", token, cookieOptions);
 
     res.json({
       message: "User Created Successfully",
@@ -68,12 +72,7 @@ authRouter.post("/login", async (req, res) => {
 
     const token = await user.getJWT();
 
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 8 * 3600000),
-      secure: true,
-      httpOnly: true,
-      sameSite: "none",
-    });
+    res.cookie("token", token, cookieOptions);
     res.json({ message: "Login Successful", user: sanitizeUser(user) });
   } catch (error) {
     res.status(400).send("ERROR: " + error.message);
@@ -81,7 +80,7 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/logout", async (req, res) => {
-  res.cookie("token", null, { expires: new Date(Date.now()) });
+  res.clearCookie("token", { ...cookieOptions, expires: new Date(0) });
   res.send("Logout Successful!!!");
 });
 
