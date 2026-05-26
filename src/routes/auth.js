@@ -6,6 +6,12 @@ const User = require("../models/user");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
 
+const sanitizeUser = (user) => {
+  const obj = user.toObject ? user.toObject() : { ...user };
+  delete obj.password;
+  return obj;
+};
+
 authRouter.post("/signup", async (req, res) => {
   try {
     // Validate the req
@@ -30,7 +36,10 @@ authRouter.post("/signup", async (req, res) => {
       sameSite: "none",
     });
 
-    res.json({ message: "User Created Successfully", data: savedUser });
+    res.json({
+      message: "User Created Successfully",
+      data: sanitizeUser(savedUser),
+    });
   } catch (error) {
     res.status(400).send("Error creating user: " + error.message);
   }
@@ -65,7 +74,7 @@ authRouter.post("/login", async (req, res) => {
       httpOnly: true,
       sameSite: "none",
     });
-    res.json({ message: "Login Successful", user });
+    res.json({ message: "Login Successful", user: sanitizeUser(user) });
   } catch (error) {
     res.status(400).send("ERROR: " + error.message);
   }

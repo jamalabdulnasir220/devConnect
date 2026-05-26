@@ -7,35 +7,38 @@ const userRouter = express.Router();
 
 const USER_SAFE_DATA = "firstName lastName photo age skills about gender";
 
+const USER_SAFE_PROJECT = {
+  firstName: 1,
+  lastName: 1,
+  photo: 1,
+  age: 1,
+  skills: 1,
+  about: 1,
+  gender: 1,
+};
+
+const parsePagination = (query) => {
+  const page = parseInt(query.page, 10) || 1;
+  let limit = parseInt(query.limit, 10) || 10;
+  limit = limit > 50 ? 50 : limit;
+  const skip = (page - 1) * limit;
+  return { page, limit, skip };
+};
+
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
+    const { limit, skip } = parsePagination(req.query);
 
     const receivedRequests = await ConnectionRequestModel.find({
       toUserId: loggedInUser._id,
       status: "Interested",
-    }).populate("fromUserId", USER_SAFE_DATA);
-
-    // if (receivedRequests.length === 0) {
-    //   return res.send("No connection requests received");
-    // }
-
-    // // Map over the received requests to include user details
-    // const receivedRequestsWithDetails = await Promise.all(
-    //   receivedRequests.map(async (request) => {
-    //     const user = await User.findById(request.fromUserId);
-    //     return {
-    //       ...request.toObject(),
-    //       User: {
-    //         _id: user._id,
-    //         name: user.firstName + " " + user.lastName,
-    //         email: user.email,
-    //       },
-    //     };
-    //   })
-    // );
-
-    // Send the response with the received requests
+    })
+      .populate("fromUserId", USER_SAFE_DATA)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     res.status(200).json({
       message: "Connection requests received successfully",
@@ -49,27 +52,59 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
 userRouter.get("/user/connections", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
+    const { limit, skip } = parsePagination(req.query);
 
-    const connections = await ConnectionRequestModel.find({
-      $or: [
-        { fromUserId: loggedInUser._id, status: "Accepted" },
-        { toUserId: loggedInUser._id, status: "Accepted" },
-      ],
-    })
-      .populate("fromUserId", USER_SAFE_DATA)
-      .populate("toUserId", USER_SAFE_DATA);
+    const connectionsWithDetails = await ConnectionRequestModel.aggregate([
+      {
+        $match: {
+          $or: [
+            { fromUserId: loggedInUser._id, status: "Accepted" },
+            { toUserId: loggedInUser._id, status: "Accepted" },
+          ],
+        },
+      },
+      { $sort: { updatedAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "users",
+          localField: "fromUserId",
+          foreignField: "_id",
+          pipeline: [{ $project: USER_SAFE_PROJECT }],
+          as: "fromUser",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "toUserId",
+          foreignField: "_id",
+          pipeline: [{ $project: USER_SAFE_PROJECT }],
+          as: "toUser",
+        },
+      },
+      { $unwind: "$fromUser" },
+      { $unwind: "$toUser" },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $cond: {
+              if: { $eq: ["$fromUserId", loggedInUser._id] },
+              then: "$toUser",
+              else: "$fromUser",
+            },
+          },
+        },
+      },
+    ]);
 
-    const connectionsWithDetails = connections.map((connection) => {
-      if (connection.fromUserId._id.equals(loggedInUser._id)) {
-        return connection.toUserId;
-      } else return connection.fromUserId;
-    });
-
-    if (connections.length === 0) {
+    if (connectionsWithDetails.length === 0) {
       return res.status(404).json({
         message: "No connections found",
       });
     }
+
     res.status(200).json({
       message: "Connections retrieved successfully",
       connections: connectionsWithDetails,
@@ -82,42 +117,46 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 userRouter.get("/user/feed", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
+    const { limit, skip } = parsePagination(req.query);
 
-    const page = parseInt(req.query.page) || 1;
-    let limit = parseInt(req.query.limit) || 10;
-    limit = limit > 50 ? 50 : limit; // Limit to a maximum of 50 results per page
-    const skip = (page - 1) * limit;
-
-    // For the feed,
-    // if we are logged in as user A,
-    // we shouldn't see the user A's profile,
-    // we should'nt see the connections the user A has interested, ignored, accepted, rejected
-
-    const connections = await ConnectionRequestModel.find({
-      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
-    }).select("fromUserId toUserId");
-
-    const hideUsersFromFeed = new Set();
-
-    connections.forEach((connection) => {
-      hideUsersFromFeed.add(connection.fromUserId.toString());
-      hideUsersFromFeed.add(connection.toUserId.toString());
-    });
-
-    // testing something
-    // console.log("Hide users from feed:", hideUsersFromFeed);
-    // Ensure the logged in user's own ID is not in the hideUsersFromFeed set
-    hideUsersFromFeed.add(loggedInUser._id.toString());
-    
-    const feedUsers = await User.find({
-      $and: [
-        { _id: { $nin: Array.from(hideUsersFromFeed) } },
-        { _id: { $ne: loggedInUser._id } },
-      ],
-    })
-      .select(USER_SAFE_DATA)
-      .skip(skip)
-      .limit(limit);
+    const feedUsers = await User.aggregate([
+      { $match: { _id: { $ne: loggedInUser._id } } },
+      {
+        $lookup: {
+          from: "connectionrequestmodels",
+          let: { candidateId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    {
+                      $and: [
+                        { $eq: ["$fromUserId", loggedInUser._id] },
+                        { $eq: ["$toUserId", "$$candidateId"] },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $eq: ["$fromUserId", "$$candidateId"] },
+                        { $eq: ["$toUserId", loggedInUser._id] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "connectionWithMe",
+        },
+      },
+      { $match: { connectionWithMe: { $eq: [] } } },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      { $project: USER_SAFE_PROJECT },
+    ]);
 
     res.status(200).json({
       message: "Feed retrieved successfully",

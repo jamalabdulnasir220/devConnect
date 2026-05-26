@@ -7,7 +7,6 @@ const http = require("http");
 // const YAML = require("yamljs");
 require("dotenv").config();
 
-
 const app = express();
 
 // Load Swagger specification from YAML file
@@ -27,7 +26,7 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
 // Swagger UI route
@@ -46,21 +45,23 @@ app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
 
-const server = http.createServer(app);
-initializeSocket(server)
+const startServer = async () => {
+  await connectDB();
+  console.log("Connection to the database successful");
 
-connectDB()
-  .then(() => {
-    console.log("Connection to the database successful");
-    server.listen(process.env.PORT || 3000, () => {
-      console.log("Listening to the app on port 3000");
-      // console.log(
-      //   `Swagger UI available at: http://localhost:${
-      //     process.env.PORT || 3000
-      //   }/api-docs`
-      // );
-    });
-  })
-  .catch((err) => {
-    console.error("Error connecting to the database", err);
+  const server = http.createServer(app);
+  initializeSocket(server);
+
+  const port = process.env.PORT || 3000;
+  server.listen(port, () => {
+    console.log(`Listening to the app on port ${port}`);
+    // console.log(
+    //   `Swagger UI available at: http://localhost:${port}/api-docs`
+    // );
   });
+};
+
+startServer().catch((err) => {
+  console.error("Error starting server", err);
+  process.exit(1);
+});

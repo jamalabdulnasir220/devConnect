@@ -24,6 +24,10 @@ const connectionRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+connectionRequestSchema.index({ toUserId: 1, status: 1 });
+connectionRequestSchema.index({ fromUserId: 1, status: 1 });
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
+
 // This will be called before saving the connection request
 // It can be used to perform any pre-save operations, like validation or logging
 
