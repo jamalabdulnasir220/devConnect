@@ -52,7 +52,7 @@ initializeSocket(server)
 connectDB()
   .then(() => {
     console.log("Connection to the database successful");
-    server.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT || 3000, () => {
       console.log("Listening to the app on port 3000");
       // console.log(
       //   `Swagger UI available at: http://localhost:${
